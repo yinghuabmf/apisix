@@ -164,8 +164,8 @@ local function parse_instance(node, service_name)
         return false
     end
 
-    local address = string.gsub(service.Address, "^%s+", "")
-    local port = string.gsub(service.Port, "^%s+", "")
+    local address = util.trim(service.Address)
+    local port = util.trim(service.Port)
     local metadata = type(service.Meta) == 'table' and service.Meta or {}
     local serviceName = service.Service
     local serviceId = service.ID
@@ -341,7 +341,6 @@ function _M.connect(premature, consul_server, retry_delay)
         -- decode body, decode json, update application, error handling
         if result.body then
             for key, value in pairs(result.body) do
-
                 local hResult, hErr = consul_client:get(consul_server.consul_health_path .. key, {
                     passing = true
                 })
