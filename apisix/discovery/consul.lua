@@ -40,7 +40,6 @@ local cjson_null         = cjson.null
 local applications = core.table.new(0, 5)
 local default_service
 local default_weight
-local default_prefix_rule
 local skip_service_map = core.table.new(0, 1)
 local dump_params
 
@@ -159,19 +158,19 @@ end
 
 local function parse_instance(node, service_name)
     local service = node.Service
-    if service == cjson_null or not service or #service == 0 then
+    if service == cjson_null or not service or not service.Address then
         log.error("consul_service_empty, service_name: ", service_name,
                 ", node: ", json_delay_encode(node, true))
         return false
     end
 
-    local address = service.Address
-    local port = service.Port
-    local metadata = service.Meta
+    local address = string.gsub(service.Address, "^%s+", "")
+    local port = string.gsub(service.Port, "^%s+", "")
+    local metadata = type(service.Meta) == 'table' and service.Meta or {}
     local serviceName = service.Service
     local serviceId = service.ID
 
-    if not address or not port then
+    if not address or not port or address == "" or port == "" then
         log.error("consul_service_not_whole, service_name: ", service_name,
                 ", node: ", json_delay_encode(node, true))
         return false
@@ -187,22 +186,21 @@ end
 
 
 local function update_application(data, service_name)
-    local sn
     local up_apps = core.table.new(0, #data)
     local weight = default_weight
 
     for _, node in ipairs(data) do
-        local success, ip, port, metadata, server_id = parse_instance(node, service_name)
+        local success, address, port, metadata, server_id = parse_instance(node, service_name)
         log.info("get service node, result: ", success, "server_name: ", service_name,
-                ", node ip: ", ip, ", port: ", port, "service_id: ", server_id)
+                ", node address: ", address, ", port: ", port, ", meta:", json_delay_encode(metadata, true), ", service_id: ", server_id)
         if success then
-            local nodes = up_apps[server_name]
+            local nodes = up_apps[service_name]
             if not nodes then
                 nodes = core.table.new(1, 0)
-                up_apps[server_name] = nodes
+                up_apps[service_name] = nodes
             end
             core.table.insert(nodes, {
-                host = ip,
+                host = address,
                 port = port,
                 weight = metadata and metadata.weight or weight,
             })
@@ -210,7 +208,7 @@ local function update_application(data, service_name)
     end
 
     -- clean old unused data
-    local old_apps = consul_apps[server_name] or {}
+    local old_apps = consul_apps[service_name] or {}
     for k, _ in pairs(old_apps) do
         applications[k] = nil
     end
@@ -219,7 +217,7 @@ local function update_application(data, service_name)
     for k, v in pairs(up_apps) do
         applications[k] = v
     end
-    consul_apps[server_name] = up_apps
+    consul_apps[service_name] = up_apps
 
     log.info("update applications: ", core.json.encode(applications))
 end
@@ -326,7 +324,8 @@ function _M.connect(premature, consul_server, retry_delay)
         goto ERR
     end
 
-    log.warn("connect consul: ", consul_server.host, ":", consul_server.port,
+    log.info("connect consul: ", consul_server.host, ":", consul_server.port,
+            ", index: ", consul_server.index,
         ", result status: ", result.status,
         ", result.headers.index: ", result.headers['X-Consul-Index'],
         ", result body: ", json_delay_encode(result.body))
@@ -340,15 +339,15 @@ function _M.connect(premature, consul_server, retry_delay)
         end
 
         -- decode body, decode json, update application, error handling
-        if result.body and #result.body ~= 0 then
-            log.warn("server_name: ", consul_server.host, ":", consul_server.port,
-                ", header: ", core.json.encode(result.headers, true),
-                ", body: ", core.json.encode(result.body, true))
-
+        if result.body then
             for key, value in pairs(result.body) do
+
                 local hResult, hErr = consul_client:get(consul_server.consul_health_path .. key, {
                     passing = true
                 })
+                log.info("server_name: ", consul_server.host, ":", consul_server.port,
+                        ", service: ", key,
+                        ", health body: ", core.json.encode(hResult.body, true))
                 local h_error_info = (hErr ~= nil and hErr)
                         or ((hResult ~= nil and hResult.status ~= 200)
                         and hResult.status)
@@ -358,7 +357,7 @@ function _M.connect(premature, consul_server, retry_delay)
                             ", got result: ", json_delay_encode(hResult, true),
                             ", with error: ", h_error_info)
                 else
-                    update_application(result.body, key)
+                    update_application(hResult.body, key)
                     --update events
                     local ok, err = events.post(events_list._source, events_list.updating, applications)
                     if not ok then
@@ -465,9 +464,6 @@ function _M.init_worker()
         default_service = consul_conf.default_service
         default_service.weight = default_weight
     end
-    default_prefix_rule = "(" .. consul_conf.prefix .. "/.*/)([a-zA-Z0-9.]+):([0-9]+)"
-    log.info("default params, default_weight: ", default_weight,
-            ", default_prefix_rule: ", default_prefix_rule)
     if consul_conf.skip_services then
         skip_service_map = core.table.new(0, #consul_conf.skip_services)
         for _, v in ipairs(consul_conf.skip_services) do
