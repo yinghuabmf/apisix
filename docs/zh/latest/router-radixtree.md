@@ -168,7 +168,7 @@ $ curl http://127.0.0.1:9080/hello
 {"error_msg":"404 Route Not Found"}
 ```
 
-`host` 规则匹配，请求命中对应的上游， `host` 不匹配，请求返回404消息。
+`host` 规则匹配，请求命中对应的上游，`host` 不匹配，请求返回404消息。
 
 #### 5. 参数匹配
 
@@ -188,7 +188,7 @@ apisix:
 /blog/:name
 ```
 
-此时将匹配 `/blog/dog` 和 `/blog/cat` 。
+此时将匹配 `/blog/dog` 和 `/blog/cat`。
 
 更多使用方式请参考：[lua-resty-radixtree#parameters-in-path](https://github.com/api7/lua-resty-radixtree/#parameters-in-path)
 
@@ -211,14 +211,39 @@ $ curl http://127.0.0.1:9080/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f
     "upstream": {
         "type": "roundrobin",
         "nodes": {
-            "39.97.63.215:80": 1
+            "127.0.0.1:1980": 1
         }
     }
 }'
 ```
 
-这个路由需要请求头 `host` 等于 `iresty.com` ，
+这个路由需要请求头 `host` 等于 `iresty.com`，
 请求 cookie `_device_id` 等于 `a66f0cdc4ba2df8c096f74c9110163a9` 等。
+
+### 如何通过 POST 表单属性过滤路由
+
+APISIX 支持通过 POST 表单属性过滤路由，其中需要您使用 `Content-Type` = `application/x-www-form-urlencoded` 的 POST 请求。
+
+我们可以定义这样的路由：
+
+```shell
+$ curl http://127.0.0.1:9080/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
+{
+    "methods": ["POST"],
+    "uri": "/_post",
+    "vars": [
+        ["post_arg_name", "==", "json"]
+    ],
+    "upstream": {
+        "type": "roundrobin",
+        "nodes": {
+            "127.0.0.1:1980": 1
+        }
+    }
+}'
+```
+
+当 POST 表单中包含 `name=json` 的属性时，将匹配到路由。
 
 ### 如何通过 GraphQL 属性过滤路由
 
@@ -260,7 +285,7 @@ $ curl http://127.0.0.1:9080/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f
     "upstream": {
         "type": "roundrobin",
         "nodes": {
-            "39.97.63.215:80": 1
+            "127.0.0.1:1980": 1
         }
     }
 }'

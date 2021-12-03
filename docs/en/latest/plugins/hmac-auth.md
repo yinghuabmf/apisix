@@ -95,7 +95,7 @@ curl http://127.0.0.1:9080/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f13
     "upstream": {
         "type": "roundrobin",
         "nodes": {
-            "39.97.63.215:80": 1
+            "127.0.0.1:1980": 1
         }
     }
 }'
@@ -332,7 +332,7 @@ $ curl http://127.0.0.1:9080/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f
     "upstream": {
         "type": "roundrobin",
         "nodes": {
-            "39.97.63.215:80": 1
+            "127.0.0.1:1980": 1
         }
     }
 }'
@@ -345,10 +345,10 @@ Need to pay attention to the handling of newline characters in signature strings
 
 Example inputs:
 
-| Variable | Value                    |
-| -------- | ------------------------ |
-| secret   | this is secret key       |
-| message  | this is signature string |
+| Variable | Value                      |
+| -------- | -------------------------- |
+| secret   | the shared secret key here |
+| message  | this is signature string   |
 
 Example outputs:
 

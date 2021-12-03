@@ -37,11 +37,13 @@ This installation method is suitable for CentOS 7. For now, the Apache APISIX RP
 
 ```shell
 sudo yum-config-manager --add-repo https://repos.apiseven.com/packages/centos/apache-apisix.repo
-# View apisix package information, only 2.10.0 is included for now
+# View the information of the latest apisix package
 sudo yum info -y apisix
+
+# Will show the existing apisix packages
 sudo yum --showduplicates list apisix
 
-# Will install apisix-2.10.0
+# Will install the latest apisix package
 sudo yum install apisix
 ```
 
@@ -50,16 +52,6 @@ If the official OpenResty repository is not installed yet, the following command
 ```shell
 sudo yum install -y https://repos.apiseven.com/packages/centos/apache-apisix-repo-1.0-1.noarch.rpm
 ```
-
-### Installation via RPM Package(CentOS 7)
-
-This installation method is suitable for CentOS 7, please run the following command to install Apache APISIX.
-
-```shell
-sudo yum install -y https://github.com/apache/apisix/releases/download/2.10.0/apisix-2.10.0-0.el7.x86_64.rpm
-```
-
-> You can also install the RPM package via running `sudo yum install -y https://repos.apiseven.com/packages/centos/7/x86_64/apisix-2.10.0-0.el7.x86_64.rpm`.
 
 ### Installation via Docker
 
@@ -71,16 +63,16 @@ Please refer to: [Installing Apache APISIX with Helm Chart](https://github.com/a
 
 ### Installation via Source Release Package
 
-1. Create a directory named `apisix-2.10.0`.
+1. Create a directory named `apisix-2.11.0`.
 
   ```shell
-  mkdir apisix-2.10.0
+  mkdir apisix-2.11.0
   ```
 
 2. Download Apache APISIX Release source package.
 
   ```shell
-  wget https://downloads.apache.org/apisix/2.10.0/apache-apisix-2.10.0-src.tgz
+  wget https://downloads.apache.org/apisix/2.11.0/apache-apisix-2.11.0-src.tgz
   ```
 
   You can also download the Apache APISIX Release source package from the Apache APISIX website. The [Apache APISIX Official Website - Download Page](https://apisix.apache.org/downloads/) also provides source packages for Apache APISIX, APISIX Dashboard and APISIX Ingress Controller.
@@ -88,14 +80,14 @@ Please refer to: [Installing Apache APISIX with Helm Chart](https://github.com/a
 3. Unzip the Apache APISIX Release source package.
 
   ```shell
-  tar zxvf apache-apisix-2.10.0-src.tgz -C apisix-2.10.0
+  tar zxvf apache-apisix-2.11.0-src.tgz -C apisix-2.11.0
   ```
 
 4. Install the runtime dependent Lua libraries.
 
   ```shell
-  # Switch to the apisix-2.10.0 directory
-  cd apisix-2.10.0
+  # Switch to the apisix-2.11.0 directory
+  cd apisix-2.11.0
   # Create dependencies
   make deps
   # Install apisix command
@@ -178,7 +170,7 @@ apisix help
   git clone https://github.com/iresty/test-nginx.git
   ```
 
-4. Load the test-nginx library with the `prove` command in `perl` and run the test case set in the `/t` directory.
+4. Here are two ways of running tests:
 
   - Append the current directory to the perl module directory: `export PERL5LIB=.:$PERL5LIB`, then run `make test` command.
 
@@ -219,6 +211,8 @@ Run the specified test case using the following command.
 ```shell
 prove -Itest-nginx/lib -r t/plugin/openid-connect.t
 ```
+
+For more details on the test cases, see the [testing framwork](https://github.com/apache/apisix/blob/master/docs/en/latest/internal/testing-framework.md).
 
 ## Step 5: Update Admin API token to Protect Apache APISIX
 

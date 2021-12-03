@@ -38,9 +38,83 @@ __DATA__
 
 === TEST 1: get plugins' name
 --- request
-GET /apisix/admin/plugins/list
---- response_body_like eval
-qr/\["real-ip","client-control","ext-plugin-pre-req","zipkin","request-id","fault-injection","serverless-pre-function","batch-requests","cors","ip-restriction","ua-restriction","referer-restriction","uri-blocker","request-validation","openid-connect","authz-casbin","wolf-rbac","ldap-auth","hmac-auth","basic-auth","jwt-auth","key-auth","consumer-restriction","authz-keycloak","proxy-mirror","proxy-cache","proxy-rewrite","api-breaker","limit-conn","limit-count","limit-req","gzip","server-info","traffic-split","redirect","response-rewrite","grpc-transcode","prometheus","echo","http-logger","sls-logger","tcp-logger","kafka-logger","syslog","udp-logger","example-plugin","serverless-post-function","ext-plugin-post-req"\]/
+--- config
+    location /t {
+        content_by_lua_block {
+            local t = require("lib.test_admin").test
+            local json = require('cjson')
+            local code, _, body = t("/apisix/admin/plugins/list", "GET")
+             if code >= 300 then
+                ngx.status = code
+                ngx.say(body)
+                return
+            end
+
+            local tab = json.decode(body)
+            for _, v in ipairs(tab) do
+                ngx.say(v)
+            end
+        }
+    }
+--- request
+GET /t
+
+--- response_body
+real-ip
+client-control
+ext-plugin-pre-req
+zipkin
+request-id
+fault-injection
+serverless-pre-function
+batch-requests
+cors
+ip-restriction
+ua-restriction
+referer-restriction
+uri-blocker
+request-validation
+openid-connect
+authz-casbin
+wolf-rbac
+ldap-auth
+hmac-auth
+basic-auth
+jwt-auth
+key-auth
+consumer-restriction
+authz-keycloak
+proxy-mirror
+proxy-cache
+proxy-rewrite
+api-breaker
+limit-conn
+limit-count
+limit-req
+gzip
+server-info
+traffic-split
+redirect
+response-rewrite
+grpc-transcode
+prometheus
+datadog
+echo
+http-logger
+skywalking-logger
+google-cloud-logging
+sls-logger
+tcp-logger
+kafka-logger
+syslog
+udp-logger
+example-plugin
+aws-lambda
+azure-functions
+openwhisk
+serverless-post-function
+ext-plugin-post-req
+
 --- no_error_log
 [error]
 
@@ -298,7 +372,7 @@ qr/\{"properties":\{"password":\{"type":"string"\},"username":\{"type":"string"\
         }
     }
 --- response_body
-{"priority":1003,"schema":{"$comment":"this is a mark for our injected plugin schema","properties":{"burst":{"minimum":0,"type":"integer"},"conn":{"exclusiveMinimum":0,"type":"integer"},"default_conn_delay":{"exclusiveMinimum":0,"type":"number"},"disable":{"type":"boolean"},"key":{"enum":["remote_addr","server_addr"],"type":"string"},"only_use_default_delay":{"default":false,"type":"boolean"}},"required":["conn","burst","default_conn_delay","key"],"type":"object"},"version":0.1}
+{"priority":1003,"schema":{"$comment":"this is a mark for our injected plugin schema","properties":{"burst":{"minimum":0,"type":"integer"},"conn":{"exclusiveMinimum":0,"type":"integer"},"default_conn_delay":{"exclusiveMinimum":0,"type":"number"},"disable":{"type":"boolean"},"key":{"type":"string"},"key_type":{"default":"var","enum":["var","var_combination"],"type":"string"},"only_use_default_delay":{"default":false,"type":"boolean"}},"required":["conn","burst","default_conn_delay","key"],"type":"object"},"version":0.1}
 --- no_error_log
 [error]
 

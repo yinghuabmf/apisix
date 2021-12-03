@@ -367,6 +367,12 @@ function _M.http_access_phase()
         end
     end
 
+    -- To prevent being hacked by untrusted request_uri, here we
+    -- record the normalized but not rewritten uri as request_uri,
+    -- the original request_uri can be accessed via var.real_request_uri
+    api_ctx.var.real_request_uri = api_ctx.var.request_uri
+    api_ctx.var.request_uri = api_ctx.var.uri .. api_ctx.var.is_args .. (api_ctx.var.args or "")
+
     if router.api.has_route_not_under_apisix() or
         core.string.has_prefix(uri, "/apisix/")
     then
@@ -708,10 +714,6 @@ function _M.http_log_phase()
 
     if api_ctx.server_picker and api_ctx.server_picker.after_balance then
         api_ctx.server_picker.after_balance(api_ctx, false)
-    end
-
-    if api_ctx.uri_parse_param then
-        core.tablepool.release("uri_parse_param", api_ctx.uri_parse_param)
     end
 
     core.ctx.release_vars(api_ctx)

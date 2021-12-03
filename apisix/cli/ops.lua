@@ -28,7 +28,9 @@ local jsonschema = require("jsonschema")
 local stderr = io.stderr
 local ipairs = ipairs
 local pairs = pairs
+local pcall = pcall
 local print = print
+local require = require
 local type = type
 local tostring = tostring
 local tonumber = tonumber
@@ -395,6 +397,19 @@ local function init(env)
         util.die("failed to validate config: ", err, "\n")
     end
 
+    if yaml_conf.discovery then
+        for kind, conf in pairs(yaml_conf.discovery) do
+            local ok, schema = pcall(require, "apisix.discovery." .. kind .. ".schema")
+            if ok then
+                local validator = jsonschema.generate_validator(schema)
+                local ok, err = validator(conf)
+                if not ok then
+                    util.die("invalid discovery ", kind, " configuration: ", err, "\n")
+                end
+            end
+        end
+    end
+
     -- check the Admin API token
     local checked_admin_key = false
     if yaml_conf.apisix.enable_admin and yaml_conf.apisix.allow_admin then
@@ -480,6 +495,26 @@ Please modify "admin_key" in conf/config.yaml .
 
     if enabled_plugins["proxy-cache"] and not yaml_conf.apisix.proxy_cache then
         util.die("missing apisix.proxy_cache for plugin proxy-cache\n")
+    end
+
+    if enabled_plugins["batch-requests"] then
+        local pass_real_client_ip = false
+        local real_ip_from = yaml_conf.nginx_config.http.real_ip_from
+        -- the real_ip_from is enabled by default, we just need to make sure it's
+        -- not disabled by the users
+        if real_ip_from then
+            for _, ip in ipairs(real_ip_from) do
+                -- TODO: handle cidr
+                if ip == "127.0.0.1" or ip == "0.0.0.0/0" then
+                    pass_real_client_ip = true
+                end
+            end
+        end
+
+        if not pass_real_client_ip then
+            util.die("missing '127.0.0.1' in the nginx_config.http.real_ip_from for plugin " ..
+                     "batch-requests\n")
+        end
     end
 
     local ports_to_check = {}

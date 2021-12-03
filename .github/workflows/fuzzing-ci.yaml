@@ -2,14 +2,12 @@ name: fuzzing
 
 on:
   push:
-    branches:
-      - master
+    branches: [master, 'release/**']
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
   pull_request:
-    branches:
-      - master
+    branches: [master, 'release/**']
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
@@ -22,15 +20,16 @@ jobs:
   test_apisix:
     name: run fuzzing
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
     - name: Check out code
-      uses: actions/checkout@v2.3.5
+      uses: actions/checkout@v2.4.0
       with:
         submodules: recursive
 
     - name: Cache deps
-      uses: actions/cache@v2.1.6
+      uses: actions/cache@v2.1.7
       env:
         cache-name: cache-deps
       with:
@@ -51,6 +50,7 @@ jobs:
         sudo apt-get install -y git openresty curl openresty-openssl111-dev unzip make gcc libldap2-dev
         ./utils/linux-install-luarocks.sh
 
+        git config --global url.https://github.com/.insteadOf git://github.com/
         make deps
         make init
         make run

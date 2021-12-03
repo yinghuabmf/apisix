@@ -301,6 +301,38 @@ _EOC_
         $block->set_value("config", $config)
     }
 
+    # handling shell exec in test Nginx
+    my $exec_snippet = $block->exec;
+    if ($exec_snippet) {
+        # capture the stdin & max response size
+        my $stdin = "nil";
+        if ($block->stdin) {
+            $stdin = '"' . $block->stdin . '"';
+        }
+        chomp  $exec_snippet;
+        chomp $stdin;
+
+        my $max_size = $block->max_size // 8096;
+        $block->set_value("request", "GET /exec_request");
+
+        my $config = $block->config // '';
+        $config .= <<_EOC_;
+            location /exec_request {
+                content_by_lua_block {
+                    local shell = require("resty.shell")
+                    local ok, stdout, stderr, reason, status = shell.run([[ $exec_snippet ]], $stdin, @{[$timeout*1000]}, $max_size)
+                    if not ok then
+                        ngx.log(ngx.WARN, "failed to execute the script with status: " .. status .. ", reason: " .. reason .. ", stderr: " .. stderr)
+                        return
+                    end
+                    ngx.print(stdout)
+                }
+            }
+_EOC_
+
+        $block->set_value("config", $config)
+    }
+
     my $stream_enable = $block->stream_enable;
     my $stream_conf_enable = $block->stream_conf_enable;
     my $extra_stream_config = $block->extra_stream_config // '';
@@ -599,7 +631,7 @@ _EOC_
     $config .= <<_EOC_;
         $ipv6_listen_conf
 
-        listen 1994 ssl;
+        listen 1994 ssl http2;
         ssl_certificate             cert/apisix.crt;
         ssl_certificate_key         cert/apisix.key;
         lua_ssl_trusted_certificate cert/apisix.crt;

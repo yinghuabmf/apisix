@@ -1,5 +1,5 @@
 {
-  "version": "2.10.0",
+  "version": "2.11.0",
   "sidebar": [
     {
       "type": "category",
@@ -35,12 +35,13 @@
           "label": "General",
           "items": [
             "plugins/batch-requests",
-            "plugins/serverless",
             "plugins/redirect",
             "plugins/echo",
             "plugins/gzip",
             "plugins/real-ip",
-            "plugins/server-info"
+            "plugins/server-info",
+            "plugins/ext-plugin-post-req",
+            "plugins/ext-plugin-pre-req"
           ]
         },
         {
@@ -91,7 +92,8 @@
             "plugins/proxy-mirror",
             "plugins/api-breaker",
             "plugins/traffic-split",
-            "plugins/request-id"
+            "plugins/request-id",
+            "plugins/client-control"
           ]
         },
         {
@@ -109,13 +111,22 @@
           "label": "Loggers",
           "items": [
             "plugins/http-logger",
+            "plugins/skywalking-logger",
             "plugins/tcp-logger",
             "plugins/kafka-logger",
             "plugins/udp-logger",
             "plugins/syslog",
             "plugins/log-rotate",
             "plugins/error-log-logger",
-            "plugins/sls-logger"
+            "plugins/sls-logger",
+            "plugins/google-cloud-logging"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Serverless",
+          "items": [
+            "plugins/serverless"
           ]
         },
         {

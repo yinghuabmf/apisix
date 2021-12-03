@@ -23,6 +23,9 @@ title: Changelog
 
 ## Table of Contents
 
+- [2.11.0](#2110)
+- [2.10.2](#2102)
+- [2.10.1](#2101)
 - [2.10.0](#2100)
 - [2.9.0](#290)
 - [2.8.0](#280)
@@ -45,6 +48,65 @@ title: Changelog
 - [0.8.0](#080)
 - [0.7.0](#070)
 - [0.6.0](#060)
+
+## 2.11.0
+
+### Change
+
+- change(wolf-rbac): change default port number and add `authType` parameter to documentation [#5477](https://github.com/apache/apisix/pull/5477)
+
+### Core
+
+- :sunrise: feat: support advanced matching based on post form [#5409](https://github.com/apache/apisix/pull/5409)
+- :sunrise: feat: initial wasm support [#5288](https://github.com/apache/apisix/pull/5288)
+- :sunrise: feat(control): expose services[#5271](https://github.com/apache/apisix/pull/5271)
+- :sunrise: feat(control): add dump upstream api [#5259](https://github.com/apache/apisix/pull/5259)
+- :sunrise: feat: etcd cluster single node failure APISIX startup failure [#5158](https://github.com/apache/apisix/pull/5158)
+- :sunrise: feat: support specify custom sni in etcd conf [#5206](https://github.com/apache/apisix/pull/5206)
+
+### Plugin
+
+- :sunrise: feat(plugin): azure serverless functions [#5479](https://github.com/apache/apisix/pull/5479)
+- :sunrise: feat(kafka-logger): supports logging request body [#5501](https://github.com/apache/apisix/pull/5501)
+- :sunrise: feat: provide skywalking logger plugin [#5478](https://github.com/apache/apisix/pull/5478)
+- :sunrise: feat(plugins): Datadog for metrics collection [#5372](https://github.com/apache/apisix/pull/5372)
+- :sunrise: feat(limit-* plugin):  fallback to remote_addr when key is missing [#5422](https://github.com/apache/apisix/pull/5422)
+- :sunrise: feat(limit-count): support multiple variables as key [#5378](https://github.com/apache/apisix/pull/5378)
+- :sunrise: feat(limit-conn): support multiple variables as key [#5354](https://github.com/apache/apisix/pull/5354)
+- :sunrise: feat(proxy-rewrite): rewrite method [#5292](https://github.com/apache/apisix/pull/5292)
+- :sunrise: feat(limit-req): support multiple variables as key [#5302](https://github.com/apache/apisix/pull/5302)
+- :sunrise: feat(proxy-cache): support memory-based strategy [#5028](https://github.com/apache/apisix/pull/5028)
+- :sunrise: feat(ext-plugin): avoid sending conf request more times [#5183](https://github.com/apache/apisix/pull/5183)
+- :sunrise: feat: Add ldap-auth plugin [#3894](https://github.com/apache/apisix/pull/3894)
+
+## 2.10.2
+
+### Bugfix
+
+- fix: response.set_header should remove header like request.set_header [#5499](https://github.com/apache/apisix/pull/5499)
+- fix(batch-requests): correct the client ip in the pipeline [#5476](https://github.com/apache/apisix/pull/5476)
+- fix(upstream): load imbalance when it's referred by multiple routes [#5462](https://github.com/apache/apisix/pull/5462)
+- fix(hmac-auth): check if the X-HMAC-ALGORITHM header is missing [#5467](https://github.com/apache/apisix/pull/5467)
+- fix: prevent being hacked by untrusted request_uri [#5458](https://github.com/apache/apisix/pull/5458)
+- fix(admin): modify boolean parameters with PATCH [#5434](https://github.com/apache/apisix/pull/5432)
+- fix(traffic-split): multiple rules with multiple weighted_upstreams under each rule cause upstream_key duplicate [#5414](https://github.com/apache/apisix/pull/5414)
+- fix: add handler for invalid basic auth header values [#5419](https://github.com/apache/apisix/pull/5419)
+
+### Change
+
+- change: log insensitive consumer info only [#5445](https://github.com/apache/apisix/pull/5445)
+
+## 2.10.1
+
+### Bugfix
+
+- fix(zipkin): response_span doesn't have correct start time [#5295](https://github.com/apache/apisix/pull/5295)
+- fix(ext-plugin): don't use stale key [#5309](https://github.com/apache/apisix/pull/5309)
+- fix: route's timeout should not be overwrittern by service [#5219](https://github.com/apache/apisix/pull/5219)
+- fix: filter nil plugin conf triggered by etcd dir init [#5204](https://github.com/apache/apisix/pull/5204)
+- fix: pass correct host header to health checker target nodes [#5175](https://github.com/apache/apisix/pull/5175)
+- fix: upgrade lua-resty-balancer to 0.04 [#5144](https://github.com/apache/apisix/pull/5144)
+- fix(prometheus): avoid negative latency caused by inconsistent Nginx metrics [#5150](https://github.com/apache/apisix/pull/5150)
 
 ## 2.10.0
 

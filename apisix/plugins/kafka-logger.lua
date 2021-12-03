@@ -74,6 +74,27 @@ local schema = {
         inactive_timeout = {type = "integer", minimum = 1, default = 5},
         batch_max_size = {type = "integer", minimum = 1, default = 1000},
         include_req_body = {type = "boolean", default = false},
+        include_req_body_expr = {
+            type = "array",
+            minItems = 1,
+            items = {
+                type = "array",
+                items = {
+                    type = "string"
+                }
+            }
+        },
+        include_resp_body = {type = "boolean", default = false},
+        include_resp_body_expr = {
+            type = "array",
+            minItems = 1,
+            items = {
+                type = "array",
+                items = {
+                    type = "string"
+                }
+            }
+        },
         -- in lua-resty-kafka, cluster_name is defined as number
         -- see https://github.com/doujiang24/lua-resty-kafka#new-1
         cluster_name = {type = "integer", minimum = 1, default = 1},
@@ -101,7 +122,12 @@ function _M.check_schema(conf, schema_type)
     if schema_type == core.schema.TYPE_METADATA then
         return core.schema.check(metadata_schema, conf)
     end
-    return core.schema.check(schema, conf)
+
+    local ok, err = core.schema.check(schema, conf)
+    if not ok then
+        return nil, err
+    end
+    return log_util.check_log_schema(conf)
 end
 
 
@@ -168,6 +194,11 @@ local function send_kafka_data(conf, log_message, prod)
     end
 
     return true
+end
+
+
+function _M.body_filter(conf, ctx)
+    log_util.collect_body(conf, ctx)
 end
 
 
