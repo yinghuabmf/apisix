@@ -24,7 +24,6 @@ jobs:
         platform:
           - ubuntu-18.04
         job_name:
-          - linux_apisix_master_luarocks
           - linux_apisix_current_luarocks
           - linux_apisix_current_luarocks_in_customed_nginx
 

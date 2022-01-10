@@ -1,5 +1,4 @@
-#!/bin/sh
-
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -17,8 +16,10 @@
 # limitations under the License.
 #
 
-wget https://github.com/etcd-io/etcd/releases/download/v3.4.0/etcd-v3.4.0-linux-amd64.tar.gz
-tar xf etcd-v3.4.0-linux-amd64.tar.gz
-sudo cp etcd-v3.4.0-linux-amd64/etcd /usr/local/bin/
-sudo cp etcd-v3.4.0-linux-amd64/etcdctl /usr/local/bin/
-rm -rf etcd-v3.4.0-linux-amd64
+set -ex
+
+npm install
+
+CGO_ENABLED=0 go build -o grpc-web-server server.go
+
+./grpc-web-server > grpc-web-server.log 2>&1 || (cat grpc-web-server.log && exit 1)&

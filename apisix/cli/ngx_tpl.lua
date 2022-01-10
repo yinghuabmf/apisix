@@ -84,6 +84,13 @@ stream {
     lua_ssl_trusted_certificate {* ssl.ssl_trusted_certificate *};
     {% end %}
 
+    # for stream logs, off by default
+    {% if stream.enable_access_log == true then %}
+    log_format main escape={* stream.access_log_format_escape *} '{* stream.access_log_format *}';
+
+    access_log {* stream.access_log *} main buffer=16384 flush=3;
+    {% end %}
+
     # stream configuration snippet starts
     {% if stream_configuration_snippet then %}
     {* stream_configuration_snippet *}
@@ -148,7 +155,7 @@ stream {
 }
 {% end %}
 
-{% if not (stream_proxy and stream_proxy.only ~= false) then %}
+{% if enable_admin or not (stream_proxy and stream_proxy.only ~= false) then %}
 http {
     # put extra_lua_path in front of the builtin path
     # so user can override the source code
@@ -257,6 +264,7 @@ http {
 
     {% if use_apisix_openresty then %}
     apisix_delay_client_max_body_check on;
+    apisix_mirror_on_demand on;
     {% end %}
 
     access_log {* http.access_log *} main buffer=16384 flush=3;
@@ -573,6 +581,12 @@ http {
             set $ctx_ref                     '';
             set $from_error_page             '';
 
+            # http server location configuration snippet starts
+            {% if http_server_location_configuration_snippet then %}
+            {* http_server_location_configuration_snippet *}
+            {% end %}
+            # http server location configuration snippet ends
+
             {% if enabled_plugins["dubbo-proxy"] then %}
             set $dubbo_service_name          '';
             set $dubbo_service_version       '';
@@ -702,9 +716,11 @@ http {
         location = /proxy_mirror {
             internal;
 
+            {% if not use_apisix_openresty then %}
             if ($upstream_mirror_host = "") {
                 return 200;
             }
+            {% end %}
 
             proxy_http_version 1.1;
             proxy_set_header Host $upstream_host;

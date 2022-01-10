@@ -55,6 +55,7 @@ title: mqtt-proxy
         http: 'radixtree_uri'
         ssl: 'radixtree_sni'
     stream_proxy:                 # TCP/UDP proxy
+      only: false                 # 如需 HTTP 与 Stream 代理同时生效，需要增加该键值
       tcp:                        # TCP proxy port list
         - 9100
     dns_resolver:
@@ -63,12 +64,11 @@ title: mqtt-proxy
 
 然后把 MQTT 请求发送到 9100 端口即可。
 
-下面是一个示例，在指定的 route 上开启了 mqtt-proxy 插件:
+下面是一个示例，在指定的 route 上开启了 `mqtt-proxy` 插件:
 
 ```shell
 curl http://127.0.0.1:9080/apisix/admin/stream_routes/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
 {
-    "remote_addr": "127.0.0.1",
     "plugins": {
         "mqtt-proxy": {
             "protocol_name": "MQTT",
@@ -85,6 +85,8 @@ curl http://127.0.0.1:9080/apisix/admin/stream_routes/1 -H 'X-API-KEY: edd1c9f03
     }
 }'
 ```
+
+在 Docker 与 MacOS 结合使用的情况下，`host.docker.internal` 是 `host` 的正确参数。
 
 #### 禁用插件
 

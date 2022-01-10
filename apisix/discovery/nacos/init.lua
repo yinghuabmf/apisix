@@ -19,7 +19,6 @@ local require            = require
 local local_conf         = require('apisix.core.config_local').local_conf()
 local http               = require('resty.http')
 local core               = require('apisix.core')
-local schema             = require('apisix.discovery.nacos.schema')
 local ipairs             = ipairs
 local type               = type
 local math               = math
@@ -205,7 +204,8 @@ local function iter_and_add_service(services, values)
             core.table.insert(services, {
                 service_name = up.service_name,
                 namespace_id = namespace_id,
-                group_name = group_name
+                group_name = group_name,
+                scheme = up.scheme,
             })
         end
         ::CONTINUE::
@@ -229,6 +229,13 @@ local function get_nacos_services()
     return services
 end
 
+local function is_grpc(scheme)
+    if scheme == 'grpc' or scheme == 'grpcs' then
+        return true
+    end
+
+    return false
+end
 
 local function fetch_full_registry(premature)
     if premature then
@@ -256,6 +263,7 @@ local function fetch_full_registry(premature)
         local data, err
         local namespace_id = service_info.namespace_id
         local group_name = service_info.group_name
+        local scheme = service_info.scheme or ''
         local namespace_param = get_namespace_param(service_info.namespace_id)
         local group_name_param = get_group_name_param(service_info.group_name)
         local query_path = instance_list_path .. service_info.service_name
@@ -282,11 +290,19 @@ local function fetch_full_registry(premature)
                 up_apps[namespace_id]
                     [group_name][service_info.service_name] = nodes
             end
-            core.table.insert(nodes, {
+
+            local node = {
                 host = host.ip,
                 port = host.port,
                 weight = host.weight or default_weight,
-            })
+            }
+
+            -- docs: https://github.com/yidongnan/grpc-spring-boot-starter/pull/496
+            if is_grpc(scheme) and host.metadata and host.metadata.gRPC_port then
+                node.port = host.metadata.gRPC_port
+            end
+
+            core.table.insert(nodes, node)
         end
 
         ::CONTINUE::
@@ -333,9 +349,6 @@ end
 
 
 function _M.init_worker()
-    -- inject the default values
-    core.schema.check(schema, local_conf.discovery.nacos)
-
     events = require("resty.worker.events")
     events_list = events.event_list("discovery_nacos_update_application",
                                     "updating")

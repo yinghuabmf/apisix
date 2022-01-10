@@ -65,11 +65,16 @@ local type = type
 
 
 local events_list
-local lrucache = core.lrucache.new({
-    type = "plugin",
-    invalid_stale = true,
-    ttl = helper.get_conf_token_cache_time(),
-})
+
+local function new_lrucache()
+    return core.lrucache.new({
+        type = "plugin",
+        invalid_stale = true,
+        ttl = helper.get_conf_token_cache_time(),
+    })
+end
+local lrucache = new_lrucache()
+
 local shdict_name = "ext-plugin"
 local shdict = ngx.shared[shdict_name]
 
@@ -94,6 +99,7 @@ local schema = {
             },
             minItems = 1,
         },
+        allow_degradation = {type = "boolean", default = false}
     },
 }
 
@@ -514,7 +520,6 @@ local rpc_handlers = {
         http_req_call_req.AddArgs(builder, args_vec)
         http_req_call_req.AddHeaders(builder, hdrs_vec)
         http_req_call_req.AddMethod(builder, encode_a6_method(method))
-        -- TODO: handle extraInfo
 
         local req = http_req_call_req.End(builder)
         builder:Finish(req)
@@ -669,17 +674,14 @@ rpc_call = function (ty, conf, ctx, ...)
 end
 
 
-local function create_lrucache()
+local function recreate_lrucache()
     flush_token()
 
     if lrucache then
         core.log.warn("flush conf token lrucache")
     end
 
-    lrucache = core.lrucache.new({
-        type = "plugin",
-        ttl = helper.get_conf_token_cache_time(),
-    })
+    lrucache = new_lrucache()
 end
 
 
@@ -699,14 +701,22 @@ function _M.communicate(conf, ctx, plugin_name)
 
         if not core.string.find(err, "conf token not found") then
             core.log.error(err)
+            if conf.allow_degradation then
+                core.log.warn("Plugin Runner is wrong, allow degradation")
+                return
+            end
             return 503
         end
 
         core.log.warn("refresh cache and try again")
-        create_lrucache()
+        recreate_lrucache()
     end
 
     core.log.error(err)
+    if conf.allow_degradation then
+        core.log.warn("Plugin Runner is wrong after " .. tries .. " times retry, allow degradation")
+        return
+    end
     return 503
 end
 
@@ -800,7 +810,7 @@ function _M.init_worker()
     )
 
     -- flush cache when runner exited
-    events.register(create_lrucache, events_list._source, events_list.runner_exit)
+    events.register(recreate_lrucache, events_list._source, events_list.runner_exit)
 
     -- note that the runner is run under the same user as the Nginx master
     if process.type() == "privileged agent" then

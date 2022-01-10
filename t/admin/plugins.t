@@ -83,6 +83,7 @@ basic-auth
 jwt-auth
 key-auth
 consumer-restriction
+opa
 authz-keycloak
 proxy-mirror
 proxy-cache
@@ -97,15 +98,18 @@ traffic-split
 redirect
 response-rewrite
 grpc-transcode
+grpc-web
 prometheus
 datadog
 echo
 http-logger
+splunk-hec-logging
 skywalking-logger
 google-cloud-logging
 sls-logger
 tcp-logger
 kafka-logger
+rocketmq-logger
 syslog
 udp-logger
 example-plugin
